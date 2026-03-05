@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>施設ブラウザ｜楽天トラベル13エリア</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Shippori+Mincho:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f2ee;--paper:#fff;--ink:#1a1612;--ink2:#4a4540;--ink3:#8a8078;
+  --rule:#ddd8d0;--gold:#daa520;--red:#bf0000;--red2:#dc2626;
+  --green:#1a6b3c;--green2:#27ae60;--blue:#1a3a6b;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:80px}
+
+.hdr{background:var(--ink);padding:14px 18px;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.hdr-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Shippori Mincho',serif;font-size:1.1em;font-weight:800;color:#f5f2ee}
+.logo span{color:var(--gold)}
+.hdr-sub{font-size:.7em;color:#8a8078;margin-top:2px}
+
+main{max-width:680px;margin:0 auto;padding:16px 14px}
+
+.intro{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:14px 16px;margin-bottom:16px}
+.intro-title{font-family:'Shippori Mincho',serif;font-size:.92em;font-weight:800;margin-bottom:8px}
+.intro-steps{list-style:none;counter-reset:s}
+.intro-steps li{counter-increment:s;padding:5px 0 5px 24px;position:relative;font-size:.8em;color:var(--ink2);border-bottom:1px dashed var(--rule);line-height:1.55}
+.intro-steps li:last-child{border-bottom:none}
+.intro-steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:16px;height:16px;background:var(--ink);color:#f5f2ee;border-radius:50%;font-size:.7em;font-weight:900;display:flex;align-items:center;justify-content:center}
+.intro-steps li strong{color:var(--ink)}
+
+.area-scroller{overflow-x:auto;margin-bottom:14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.area-scroller::-webkit-scrollbar{display:none}
+.area-tabs{display:flex;gap:6px;padding:2px 0;width:max-content}
+.area-tab{border:1px solid var(--rule);border-radius:20px;padding:7px 14px;font-size:.78em;font-weight:700;cursor:pointer;color:var(--ink2);background:var(--paper);white-space:nowrap;transition:all .12s}
+.area-tab.on{background:var(--ink);color:#f5f2ee;border-color:var(--ink)}
+
+.area-panel{display:none}
+.area-panel.on{display:block;animation:fu .25s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.area-header{background:var(--ink);border-radius:4px 4px 0 0;padding:12px 15px;display:flex;align-items:center;gap:10px}
+.area-icon{font-size:1.3em}
+.area-name{font-family:'Shippori Mincho',serif;font-size:1.05em;font-weight:800;color:#f5f2ee}
+.area-desc{font-size:.73em;color:#8a8078;margin-top:2px}
+
+.search-link-box{background:rgba(191,0,0,.06);border:1px solid rgba(191,0,0,.2);border-top:none;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.search-link-label{font-size:.75em;color:var(--red2);font-weight:700}
+.rakuten-btn{background:var(--red);color:white;border:none;border-radius:4px;padding:7px 14px;font-family:inherit;font-size:.78em;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .12s}
+.rakuten-btn:hover{background:var(--red2)}
+
+.fac-list{background:var(--paper);border:1px solid var(--rule);border-top:none;border-radius:0 0 4px 4px;overflow:hidden;margin-bottom:14px}
+.fac-item{border-bottom:1px solid var(--rule)}
+.fac-item:last-child{border-bottom:none}
+.fac-item-inner{padding:13px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.fac-name{font-weight:700;font-size:.9em;color:var(--ink);margin-bottom:3px}
+.fac-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.fac-tag{font-size:.67em;padding:2px 6px;border-radius:2px;font-weight:700}
+.tag-r{background:rgba(218,165,32,.12);color:#92600a;border:1px solid rgba(218,165,32,.3)}
+.tag-t{background:rgba(26,58,107,.08);color:var(--blue);border:1px solid rgba(26,58,107,.18)}
+.fac-memo{font-size:.77em;color:var(--ink3);line-height:1.5}
+.fac-actions{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.fac-open-btn{background:var(--red);color:white;border:none;border-radius:3px;padding:6px 10px;font-family:inherit;font-size:.72em;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .1s}
+.fac-open-btn:hover{background:var(--red2)}
+.fac-use-btn{background:var(--ink);color:#f5f2ee;border:none;border-radius:3px;padding:6px 10px;font-family:inherit;font-size:.72em;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .1s}
+.fac-use-btn:hover{background:#2d2925}
+.fac-use-btn.used{background:var(--green)}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:white;padding:10px 20px;border-radius:30px;font-size:.82em;font-weight:700;opacity:0;pointer-events:none;transition:all .25s;z-index:200;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.sel-bar{position:fixed;bottom:64px;left:0;right:0;z-index:90;display:none}
+.sel-bar.show{display:block}
+.sel-bar-inner{max-width:680px;margin:0 auto;background:var(--ink);border-top:2px solid var(--gold);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.sel-bar-text{flex:1;font-size:.8em;color:#f5f2ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sel-bar-text strong{color:var(--gold);display:block;font-size:.85em}
+.sel-gen-btn{background:var(--gold);color:var(--ink);border:none;border-radius:3px;padding:8px 14px;font-family:inherit;font-size:.78em;font-weight:900;cursor:pointer;white-space:nowrap}
+.sel-clear-btn{background:transparent;color:#8a8078;border:1px solid #333;border-radius:3px;padding:8px 10px;font-family:inherit;font-size:.72em;cursor:pointer}
+
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:3px solid var(--gold);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tab-item{flex:1;text-align:center;padding:10px 4px;cursor:pointer;color:#5a5550;font-size:.67em;font-weight:700;transition:color .12s}
+.tab-item.on{color:var(--gold)}
+.tab-icon{font-size:1.2em;display:block;margin-bottom:2px}
+
+.page{display:none}
+.page.on{display:block}
+
+/* GEN PAGE */
+.field-lbl{font-size:.73em;font-weight:900;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;margin-top:12px}
+.field-lbl:first-child{margin-top:0}
+.gen-input{width:100%;background:#faf8f5;border:1px solid var(--rule);border-radius:3px;padding:10px 12px;font-family:inherit;font-size:.9em;color:var(--ink);outline:none;-webkit-appearance:none}
+.gen-input:focus{border-color:var(--ink);background:#fff}
+.style-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sbtn{border:1.5px solid var(--rule);border-radius:3px;padding:9px;cursor:pointer;background:#faf8f5;text-align:left;font-family:inherit;transition:all .12s}
+.sbtn.on{border-color:var(--ink);background:var(--ink)}
+.sbtn-em{font-size:.92em;display:block;margin-bottom:3px}
+.sbtn-name{font-size:.78em;font-weight:900;display:block;color:var(--ink2)}
+.sbtn.on .sbtn-name{color:#f5f2ee}
+
+.gen-btn-main{width:100%;padding:14px;background:var(--ink);color:#f5f2ee;border:none;border-radius:3px;font-family:'Shippori Mincho',serif;font-size:1.05em;font-weight:800;letter-spacing:.08em;cursor:pointer;margin-bottom:12px;position:relative;overflow:hidden}
+.gen-btn-main::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--red2),var(--gold))}
+.gen-btn-main:disabled{opacity:.5;cursor:not-allowed}
+
+.out-card{background:var(--paper);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.out-head{padding:10px 14px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+.out-lbl{font-size:.68em;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:2px}
+.lbl-main{background:rgba(26,58,107,.08);color:var(--blue);border:1px solid rgba(26,58,107,.2)}
+.lbl-reply{background:rgba(192,57,43,.08);color:var(--red2);border:1px solid rgba(192,57,43,.2)}
+.out-chars{font-size:.7em;font-weight:700;color:var(--green2)}
+.out-body{padding:14px 16px;font-size:.88em;line-height:1.95;white-space:pre-line;min-height:80px;outline:none;cursor:text;color:var(--ink)}
+.out-foot{padding:9px 13px;border-top:1px solid var(--rule);display:flex;gap:7px;justify-content:flex-end}
+.out-btn{padding:6px 13px;border-radius:2px;border:1px solid var(--rule);font-family:inherit;font-size:.75em;font-weight:700;cursor:pointer;background:#faf8f5;color:var(--ink2);transition:all .12s}
+.out-btn:hover{background:var(--ink);color:#f5f2ee;border-color:var(--ink)}
+.out-btn.copied{background:var(--green);color:white;border-color:var(--green)}
+
+.callout{border-radius:3px;padding:10px 13px;margin-bottom:12px;font-size:.8em;line-height:1.7}
+.callout.info{background:rgba(26,58,107,.07);border-left:3px solid var(--blue);color:var(--blue)}
+.callout strong{color:var(--ink)}
+
+.dots{display:inline-flex;gap:5px;align-items:center}
+.dots span{width:7px;height:7px;background:#f5f2ee;border-radius:50%;animation:db 1.1s infinite ease-in-out}
+.dots span:nth-child(2){animation-delay:.18s}
+.dots span:nth-child(3){animation-delay:.36s}
+@keyframes db{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+.apikey-warn{background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.25);border-radius:4px;padding:13px 15px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div>
+      <div class="logo">🏨 施設<span>ブラウザ</span></div>
+      <div class="hdr-sub">楽天トラベル 13エリア｜口コミ評価高い宿</div>
+    </div>
+  </div>
+</div>
+
+<div class="sel-bar" id="sel-bar">
+  <div class="sel-bar-inner">
+    <div class="sel-bar-text">
+      <strong id="sel-name">選択中</strong>
+      <span id="sel-area-text"></span>
+    </div>
+    <button class="sel-clear-btn" onclick="clearSel()">✕</button>
+    <button class="sel-gen-btn" onclick="goGenerate()">✦ 投稿文生成へ</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<main>
+  <div class="page on" id="page-main">
+
+    <div class="intro">
+      <div class="intro-title">📋 使い方</div>
+      <ol class="intro-steps">
+        <li>エリアを選んで施設を探す</li>
+        <li>「<strong>楽天で見る</strong>」→ 施設ページが開く → URLをコピー → 楽天アフィリエイトでリンク生成</li>
+        <li>「<strong>この施設で投稿</strong>」→ 施設名が自動入力された状態で投稿生成ページへ</li>
+      </ol>
+    </div>
+
+    <div class="area-scroller">
+      <div class="area-tabs" id="area-tabs"></div>
+    </div>
+    <div id="area-panels"></div>
+
+  </div>
+
+  <div class="page" id="page-gen">
+
+    <div class="callout info" id="gen-from-fac" style="display:none">
+      ✦ <strong id="gen-fac-name"></strong> の投稿文を生成します
+    </div>
+
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:16px;margin-bottom:12px">
+      <div class="field-lbl">📍 場所・宿名</div>
+      <input type="text" id="inp-place" class="gen-input" placeholder="施設名が自動入力されます" />
+
+      <div class="field-lbl">🏷 ジャンル</div>
+      <select id="inp-genre" class="gen-input" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22%3E%3Cpath fill=%22%234a4540%22 d=%22M5 6L0 0h10z%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 12px center;padding-right:32px">
+        <option value="温泉旅館">🛁 温泉・旅館</option>
+        <option value="リゾートホテル">🏖 リゾート</option>
+        <option value="格安・コスパ宿">💴 格安・コスパ</option>
+        <option value="古民家・隠れ宿">🏯 古民家・隠れ家</option>
+        <option value="山岳・高原リゾート">🏔 山岳・高原</option>
+        <option value="離島・秘境">🏝 離島・秘境</option>
+      </select>
+
+      <div class="field-lbl">✨ 特徴・ウリ（自動入力済み・編集可）</div>
+      <input type="text" id="inp-feat" class="gen-input" placeholder="例：全室露天風呂付き・楽天評価4.8・2食付き" />
+
+      <div class="field-lbl">🎭 スタイル</div>
+      <div class="style-grid">
+        <button class="sbtn on" data-s="list-save" onclick="selStyle(this)"><span class="sbtn-em">📋</span><span class="sbtn-name">保存したいリスト</span></button>
+        <button class="sbtn" data-s="cospa" onclick="selStyle(this)"><span class="sbtn-em">💰</span><span class="sbtn-name">コスパ訴求</span></button>
+        <button class="sbtn" data-s="discovery" onclick="selStyle(this)"><span class="sbtn-em">😲</span><span class="sbtn-name">知ってた？系</span></button>
+        <button class="sbtn" data-s="scene" onclick="selStyle(this)"><span class="sbtn-em">🌙</span><span class="sbtn-name">情景・詩的</span></button>
+      </div>
+    </div>
+
+    <button class="gen-btn-main" id="gen-btn" onclick="generate()">
+      <span style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--red2),var(--gold))"></span>
+      ✦ 投稿文を生成する
+    </button>
+
+    <div id="apikey-warn" style="display:none" class="apikey-warn">
+      <div style="font-weight:700;color:var(--red2);font-size:.88em;margin-bottom:6px">⚠️ APIキーが未設定です</div>
+      <p style="font-size:.8em;color:var(--ink2);line-height:1.7">投稿文の生成にはAnthropicのAPIキーが必要です。<br>
+      取得先：<a href="https://console.anthropic.com/" target="_blank" style="color:var(--red2)">console.anthropic.com</a> → API Keys → Create Key</p>
+      <input type="password" id="inp-apikey" class="gen-input" placeholder="sk-ant-api03-..." style="margin-top:10px;font-family:monospace;font-size:.85em" />
+      <button onclick="saveApiKey()" style="margin-top:7px;width:100%;padding:9px;background:var(--ink);color:#f5f2ee;border:none;border-radius:3px;font-family:inherit;font-size:.85em;font-weight:700;cursor:pointer">✅ 保存する</button>
+    </div>
+
+    <div id="out-wrap" style="display:none">
+      <div style="font-size:.66em;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin:0 0 12px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--rule)"></span>生成された投稿文<span style="flex:1;height:1px;background:var(--rule)"></span></div>
+
+      <div class="out-card">
+        <div class="out-head"><span class="out-lbl lbl-main">本投稿（写真4枚）</span><span class="out-chars" id="cc-main">0文字</span></div>
+        <div class="out-body" id="out-main" contenteditable="true" oninput="updCC('out-main','cc-main')"></div>
+        <div class="out-foot">
+          <button class="out-btn" onclick="regenPart('main')">🔄 再生成</button>
+          <button class="out-btn" onclick="copyEl(this,'out-main')">📋 コピー</button>
+        </div>
+      </div>
+
+      <div class="out-card">
+        <div class="out-head"><span class="out-lbl lbl-reply">リプ欄（リンク差し替え用）</span><span class="out-chars" id="cc-reply">0文字</span></div>
+        <div class="out-body" id="out-reply" contenteditable="true" oninput="updCC('out-reply','cc-reply')"></div>
+        <div class="out-foot">
+          <button class="out-btn" onclick="regenPart('reply')">🔄 再生成</button>
+          <button class="out-btn" onclick="copyEl(this,'out-reply')">📋 コピー</button>
+        </div>
+      </div>
+
+      <div class="callout info">🔗 <strong>リプ欄の【楽天アフィリリンクをここに貼る】を楽天アフィリエイトで生成したリンクに差し替えてください。</strong></div>
+    </div>
+  </div>
+</main>
+
+<div class="tab-bar">
+  <div class="tab-item on" id="tab-main" onclick="goPage('main')"><span class="tab-icon">🏨</span>施設</div>
+  <div class="tab-item" id="tab-gen" onclick="goPage('gen')"><span class="tab-icon">✦</span>投稿生成</div>
+</div>
+
+<script>
+// ─── 全施設データ（URL検索確認済み）────────────────────────────────
+const AREAS = [
+  {
+    id:'hokkaido', icon:'🌸', name:'北海道', desc:'登別・洞爺・ニセコ・富良野',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E5%8C%97%E6%B5%B7%E9%81%93%20%E6%B8%A9%E6%B3%89/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'第一滝本館（登別温泉）', rating:'4.2', tags:['登別','大規模温泉','地獄谷'], memo:'国内最大級の源泉数。地獄谷の目の前。', url:'https://travel.rakuten.co.jp/HOTEL/2792/2792.html'},
+      {name:'洞爺湖万世閣 ホテルレイクサイドテラス', rating:'4.1', tags:['洞爺湖','湖畔','花火'], memo:'洞爺湖を望む絶景リゾート。夏は毎夜花火。', url:'https://travel.rakuten.co.jp/HOTEL/12066/12066.html'},
+      {name:'ニセコグランドホテル', rating:'4.1', tags:['ニセコ','温泉','スキー'], memo:'ニセコの名湯。スキーシーズンも人気。', url:'https://travel.rakuten.co.jp/HOTEL/10296/10296.html'},
+    ]
+  },
+  {
+    id:'tohoku', icon:'🍁', name:'東北', desc:'奥入瀬・銀山・松島',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E6%9D%B1%E5%8C%97%20%E6%B8%A9%E6%B3%89/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'星野リゾート 奥入瀬渓流ホテル', rating:'4.3', tags:['絶景','渓流沿い','青森'], memo:'奥入瀬渓流沿いの森のホテル。渓流露天風呂が絶品。', url:'https://travel.rakuten.co.jp/HOTEL/40434/40434.html'},
+      {name:'銀山温泉 旅館藤屋', rating:'4.4', tags:['銀山温泉','隈研吾設計','大正浪漫'], memo:'隈研吾が設計した唯一無二の宿。SNS映えの名温泉地。', url:'https://travel.rakuten.co.jp/HOTEL/68602/68602.html'},
+      {name:'松島センチュリーホテル', rating:'4.0', tags:['松島','日本三景','海'], memo:'日本三景・松島を望む絶景ホテル。', url:'https://travel.rakuten.co.jp/HOTEL/12109/12109.html'},
+    ]
+  },
+  {
+    id:'kusatsu', icon:'♨️', name:'草津温泉', desc:'群馬・日本三名泉',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E8%8D%89%E6%B4%A5%E6%B8%A9%E6%B3%89/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'草津温泉 望雲', rating:'4.1', tags:['老舗','2源泉','湯畑近く'], memo:'創業慶長4年。2種類の源泉と6つの風呂を持つ老舗旅館。', url:'https://travel.rakuten.co.jp/HOTEL/4904/4904.html'},
+      {name:'草津温泉 奈良屋', rating:'4.3', tags:['老舗','2食付','湯畑徒歩30秒'], memo:'湯畑まで徒歩30秒の老舗。上州の味覚を活かした和食が評判。', url:'https://travel.rakuten.co.jp/HOTEL/9523/9523.html'},
+      {name:'草津温泉 ホテルヴィレッジ', rating:'4.1', tags:['大型','多数の風呂','家族向け'], memo:'広大な敷地に多彩な温泉。家族・グループ旅行に人気。', url:'https://travel.rakuten.co.jp/HOTEL/9538/9538.html'},
+    ]
+  },
+  {
+    id:'nagano', icon:'🏔', name:'長野・渋温泉', desc:'信州・山岳・秘湯',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E9%95%B7%E9%87%8E%20%E6%B8%A9%E6%B3%89/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'渋温泉 歴史の宿 金具屋', rating:'4.3', tags:['国登録文化財','8つの風呂','千と千尋'], memo:'千と千尋のモデルとも言われる国登録有形文化財の宿。', url:'https://travel.rakuten.co.jp/HOTEL/32044/32044.html'},
+      {name:'ホテルハーヴェスト旧軽井沢', rating:'4.1', tags:['軽井沢','リゾート','森林'], memo:'軽井沢の深い森の中のリゾートホテル。', url:'https://travel.rakuten.co.jp/HOTEL/12070/12070.html'},
+      {name:'野沢温泉 いなもと旅館', rating:'4.4', tags:['野沢温泉','源泉かけ流し','老舗'], memo:'野沢温泉の老舗。源泉かけ流し。スキー拠点にも人気。', url:'https://travel.rakuten.co.jp/HOTEL/9597/9597.html'},
+    ]
+  },
+  {
+    id:'hakone', icon:'🗻', name:'箱根', desc:'富士山・強羅・芦ノ湖',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E7%AE%B1%E6%A0%B9/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'箱根強羅 白檀', rating:'4.7', tags:['全室露天風呂付','自家源泉','16室の隠れ宿'], memo:'全室に自家源泉の露天風呂付。箱根で指折りの高評価宿。', url:'https://travel.rakuten.co.jp/HOTEL/153496/153496.html'},
+      {name:'箱根湯本温泉 天成園', rating:'4.1', tags:['大型','箱根湯本駅近','温泉多数'], memo:'箱根湯本駅から徒歩5分。広大な温泉施設。', url:'https://travel.rakuten.co.jp/HOTEL/10053/10053.html'},
+      {name:'強羅花壇', rating:'4.5', tags:['老舗高級旅館','庭園','昭和天皇滞在'], memo:'昭和天皇も泊まった格式ある老舗。名庭園が有名。', url:'https://travel.rakuten.co.jp/HOTEL/3298/3298.html'},
+    ]
+  },
+  {
+    id:'atami', icon:'🌊', name:'熱海・伊豆', desc:'静岡・温泉リゾート',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E7%86%B1%E6%B5%B7/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'伊豆修善寺温泉 湯回廊 菊屋', rating:'4.5', tags:['修善寺','高評価','離れ客室'], memo:'修善寺の名宿。回廊を歩いて離れへ向かう造りが独特。', url:'https://travel.rakuten.co.jp/HOTEL/61882/61882.html'},
+      {name:'熱海温泉 大野屋', rating:'4.2', tags:['老舗','熱海中心部','創業100年超'], memo:'創業100年超の老舗。熱海随一のロケーション。', url:'https://travel.rakuten.co.jp/HOTEL/1127/1127.html'},
+      {name:'下田大和館 海音里', rating:'4.3', tags:['伊豆下田','オーシャンビュー','海鮮'], memo:'下田の海を望む宿。新鮮な海鮮料理が絶品。', url:'https://travel.rakuten.co.jp/HOTEL/15291/15291.html'},
+    ]
+  },
+  {
+    id:'kanazawa', icon:'⛩', name:'石川・加賀', desc:'山中・山代・和倉温泉',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E5%8A%A0%E8%B3%80%E6%B8%A9%E6%B3%89/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'山中温泉 かよう亭', rating:'4.7', tags:['全室離れ','日本最高評価級','大人の宿'], memo:'日本でも指折りの評価を誇る超一流旅館。全室離れ。', url:'https://travel.rakuten.co.jp/HOTEL/31589/31589.html'},
+      {name:'加賀屋（和倉温泉）', rating:'4.5', tags:['能登半島','日本一の旅館','海が見える'], memo:'プロが選ぶ日本一の旅館。能登を代表する老舗の名宿。', url:'https://travel.rakuten.co.jp/HOTEL/9773/9773.html'},
+      {name:'山中温泉 花紫', rating:'4.3', tags:['山中温泉','北陸随一の眺望','露天風呂'], memo:'北陸随一の眺望を誇る露天風呂が人気の宿。', url:'https://travel.rakuten.co.jp/HOTEL/67297/67297.html'},
+    ]
+  },
+  {
+    id:'kyoto', icon:'🏯', name:'京都・奈良', desc:'古都・歴史・文化',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E4%BA%AC%E9%83%BD%20%E6%97%85%E9%A4%A8/?f_sort=satisfaction',
+    genre:'古民家・隠れ宿',
+    facilities:[
+      {name:'俵屋旅館（京都）', rating:'4.8', tags:['創業300年','文化人の宿','最高評価'], memo:'創業300年。世界の著名人が愛し続ける京都最高峰の宿。', url:'https://travel.rakuten.co.jp/HOTEL/9901/9901.html'},
+      {name:'星のや京都', rating:'4.6', tags:['嵐山','舟でのアクセス','秘境'], memo:'嵐山の秘境。舟でしか行けない話題の宿。', url:'https://travel.rakuten.co.jp/HOTEL/141456/141456.html'},
+      {name:'奈良ホテル', rating:'4.2', tags:['奈良公園','明治の名建築','鹿が来る'], memo:'東洋のグランドホテルと称される百年の名建築。', url:'https://travel.rakuten.co.jp/HOTEL/9948/9948.html'},
+    ]
+  },
+  {
+    id:'beppu', icon:'💨', name:'別府・湯布院', desc:'大分・世界一の湧出量',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E6%B9%AF%E5%B8%83%E9%99%A2/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'由布院 玉の湯', rating:'4.5', tags:['湯布院','全棟離れ','森の中'], memo:'湯布院で最も予約が取れない宿のひとつ。9900㎡の森の中。', url:'https://travel.rakuten.co.jp/HOTEL/180079/180079.html'},
+      {name:'山荘 無量塔（湯布院）', rating:'4.6', tags:['隠れ宿','古材と石','アート'], memo:'古材と石で作られた唯一無二の宿。大人の隠れ宿。', url:'https://travel.rakuten.co.jp/HOTEL/27944/27944.html'},
+      {name:'別府 杉乃井ホテル', rating:'4.0', tags:['別府','棚湯','大型リゾート'], memo:'百段棚湯が有名な別府最大のリゾートホテル。', url:'https://travel.rakuten.co.jp/HOTEL/9202/9202.html'},
+    ]
+  },
+  {
+    id:'kumamoto', icon:'🌋', name:'熊本・黒川', desc:'阿蘇・黒川温泉',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E9%BB%92%E5%B7%9D%E6%B8%A9%E6%B3%89/?f_sort=satisfaction',
+    genre:'温泉旅館',
+    facilities:[
+      {name:'黒川温泉 山あいの宿 山みず木', rating:'4.4', tags:['全室露天風呂付','渓流沿い','黒川温泉'], memo:'渓流沿いの露天風呂が絶品。姉妹館の露天も無料で入浴可。', url:'https://travel.rakuten.co.jp/HOTEL/136864/136864.html'},
+      {name:'黒川温泉 旅館 湯峡の響き 優彩', rating:'4.3', tags:['黒川温泉','全室露天付','料理自慢'], memo:'黒川温泉の中心部に位置。料理の評価が特に高い宿。', url:'https://travel.rakuten.co.jp/HOTEL/9243/9243.html'},
+      {name:'黒川温泉 いこい旅館', rating:'4.4', tags:['黒川温泉','老舗','湯めぐり'], memo:'黒川温泉を代表する老舗旅館。入湯手形で湯めぐりも。', url:'https://travel.rakuten.co.jp/HOTEL/9251/9251.html'},
+    ]
+  },
+  {
+    id:'okinawa', icon:'🌺', name:'沖縄本島', desc:'恩納・名護・リゾート',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E6%B2%96%E7%B8%84%20%E3%83%AA%E3%82%BE%E3%83%BC%E3%83%88/?f_sort=satisfaction',
+    genre:'リゾートホテル',
+    facilities:[
+      {name:'ザ・ブセナテラス', rating:'4.5', tags:['名護','プライベートビーチ','老舗高級'], memo:'沖縄随一の老舗高級リゾート。珊瑚礁の海に面したビーチ。', url:'https://travel.rakuten.co.jp/HOTEL/5665/5665.html'},
+      {name:'ハレクラニ沖縄', rating:'4.5', tags:['恩納村','ハワイの名門','プール'], memo:'ハワイで100年の歴史を持つ名門ホテルの沖縄版。', url:'https://travel.rakuten.co.jp/HOTEL/172611/172611.html'},
+      {name:'ANAインターコンチネンタル万座ビーチリゾート', rating:'4.1', tags:['万座','プライベートビーチ','マリン充実'], memo:'万座毛近くの広大なリゾート。アクティビティが豊富。', url:'https://travel.rakuten.co.jp/HOTEL/9448/9448.html'},
+    ]
+  },
+  {
+    id:'miyako', icon:'🐠', name:'宮古島', desc:'エメラルドブルーの海',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E5%AE%AE%E5%8F%A4%E5%B3%B6/?f_sort=satisfaction',
+    genre:'離島・秘境',
+    facilities:[
+      {name:'THE SCENE まいづる（宮古島）', rating:'4.5', tags:['宮古島','大人リゾート','絶景'], memo:'宮古ブルーを独占できる大人のための宿。', url:'https://travel.rakuten.co.jp/HOTEL/152455/152455.html'},
+      {name:'ホテルブリーズベイマリーナ（宮古島）', rating:'4.0', tags:['宮古島','マリーナ','ダイビング'], memo:'宮古島マリーナに隣接。海のアクティビティの拠点に最適。', url:'https://travel.rakuten.co.jp/HOTEL/9466/9466.html'},
+      {name:'宮古島東急ホテル＆リゾーツ', rating:'4.1', tags:['宮古島','東急','ビーチ'], memo:'宮古ブルーの海に面した全室オーシャンビューのリゾート。', url:'https://travel.rakuten.co.jp/HOTEL/9468/9468.html'},
+    ]
+  },
+  {
+    id:'yaeyama', icon:'🏝', name:'石垣・小浜島', desc:'八重山諸島・秘境離島',
+    searchUrl:'https://travel.rakuten.co.jp/keyword/%E7%9F%B3%E5%9E%A3%E5%B3%B6/?f_sort=satisfaction',
+    genre:'離島・秘境',
+    facilities:[
+      {name:'星野リゾート リゾナーレ小浜島', rating:'4.4', tags:['小浜島','星野リゾート','ちゅらさん'], memo:'NHK「ちゅらさん」の舞台・小浜島の名リゾート。', url:'https://travel.rakuten.co.jp/HOTEL/178403/178403.html'},
+      {name:'グランヴィリオリゾート石垣島', rating:'4.1', tags:['石垣島','リゾート','マリンスポーツ'], memo:'石垣島屈指のリゾート。アクティビティが豊富。', url:'https://travel.rakuten.co.jp/HOTEL/9463/9463.html'},
+      {name:'フサキビーチリゾート ホテル＆ヴィラズ', rating:'4.2', tags:['石垣島','プライベートビーチ','家族向け'], memo:'石垣島最大のプライベートビーチを持つリゾート。', url:'https://travel.rakuten.co.jp/HOTEL/9462/9462.html'},
+    ]
+  },
+];
+
+// ─── STATE ─────────────────────────────────────────
+let selectedFac = null, selectedAreaGenre = '';
+let apiKey = '', postStyle = 'list-save', lastParams = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  try { const k = localStorage.getItem('anthro_key'); if(k) apiKey = k; } catch(e){}
+  buildUI();
+});
+
+function buildUI() {
+  const tabsEl = document.getElementById('area-tabs');
+  const panelsEl = document.getElementById('area-panels');
+  AREAS.forEach((area, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'area-tab' + (i===0?' on':'');
+    tab.textContent = area.icon + ' ' + area.name;
+    tab.onclick = () => selectArea(i);
+    tabsEl.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = 'area-panel' + (i===0?' on':'');
+    panel.innerHTML = `
+      <div class="area-header">
+        <span class="area-icon">${area.icon}</span>
+        <div><div class="area-name">${area.name}</div><div class="area-desc">${area.desc}</div></div>
+      </div>
+      <div class="search-link-box">
+        <div class="search-link-label">楽天トラベルで口コミ評価順に検索 →</div>
+        <button class="rakuten-btn" onclick="window.open('${area.searchUrl}','_blank')">🔍 全施設を見る</button>
+      </div>
+      <div class="fac-list">
+        ${area.facilities.map((f,fi) => `
+          <div class="fac-item">
+            <div class="fac-item-inner">
+              <div>
+                <div class="fac-name">${f.name}</div>
+                <div class="fac-tags">
+                  <span class="fac-tag tag-r">⭐ ${f.rating}</span>
+                  ${f.tags.map(t=>`<span class="fac-tag tag-t">${t}</span>`).join('')}
+                </div>
+                <div class="fac-memo">${f.memo}</div>
+              </div>
+              <div class="fac-actions">
+                <button class="fac-open-btn" onclick="window.open('${f.url}','_blank')">楽天で見る</button>
+                <button class="fac-use-btn" id="use-${area.id}-${fi}" onclick="selectFac('${area.id}',${fi})">この施設で投稿</button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    panelsEl.appendChild(panel);
+  });
+}
+
+function selectArea(i) {
+  document.querySelectorAll('.area-tab').forEach((t,ti)=>t.classList.toggle('on',ti===i));
+  document.querySelectorAll('.area-panel').forEach((p,pi)=>p.classList.toggle('on',pi===i));
+}
+
+function selectFac(areaId, fi) {
+  const area = AREAS.find(a=>a.id===areaId);
+  const fac = area.facilities[fi];
+  document.querySelectorAll('.fac-use-btn').forEach(b=>{b.classList.remove('used');b.textContent='この施設で投稿'});
+  const btn = document.getElementById('use-'+areaId+'-'+fi);
+  btn.classList.add('used'); btn.textContent='✓ 選択中';
+  selectedFac = fac; selectedAreaGenre = area.genre;
+  document.getElementById('sel-name').textContent = fac.name;
+  document.getElementById('sel-area-text').textContent = area.name + ' ｜ ⭐' + fac.rating;
+  document.getElementById('sel-bar').classList.add('show');
+  showToast('✦ ' + fac.name + ' を選択しました');
+}
+
+function clearSel() {
+  selectedFac = null;
+  document.querySelectorAll('.fac-use-btn').forEach(b=>{b.classList.remove('used');b.textContent='この施設で投稿'});
+  document.getElementById('sel-bar').classList.remove('show');
+}
+
+function goGenerate() {
+  if (!selectedFac) return;
+  document.getElementById('inp-place').value = selectedFac.name;
+  document.getElementById('inp-feat').value = selectedFac.tags.join('・') + '｜' + selectedFac.memo;
+  const genreEl = document.getElementById('inp-genre');
+  const match = Array.from(genreEl.options).find(o=>o.value===selectedAreaGenre);
+  if (match) genreEl.value = selectedAreaGenre;
+  document.getElementById('gen-fac-name').textContent = selectedFac.name;
+  document.getElementById('gen-from-fac').style.display = 'block';
+  goPage('gen');
+  if (!apiKey) document.getElementById('apikey-warn').style.display = 'block';
+}
+
+function saveApiKey() {
+  const v = document.getElementById('inp-apikey').value.trim();
+  if (!v) { alert('APIキーを入力してください'); return; }
+  apiKey = v;
+  try { localStorage.setItem('anthro_key', v); } catch(e){}
+  document.getElementById('apikey-warn').style.display = 'none';
+  showToast('✅ APIキーを保存しました');
+}
+
+function selStyle(btn) {
+  document.querySelectorAll('.sbtn').forEach(b=>{ b.classList.remove('on'); b.style.background='#faf8f5'; b.style.borderColor='var(--rule)'; });
+  btn.classList.add('on'); btn.style.background='var(--ink)'; btn.style.borderColor='var(--ink)';
+  postStyle = btn.dataset.s;
+}
+
+const STYLE_GUIDE = {
+  'list-save':`スタイル：【保存したいリスト型】冒頭「〇〇な人は保存して」で呼びかける。✅や数字の箇条書きで3〜5点の特徴をまとめる。末尾「詳細↓リプ欄（#PR）」`,
+  'cospa':`スタイル：【コスパ訴求型】冒頭に価格・数字を出す。「この値段でこのクオリティはおかしい」系の驚きを演出。具体スペックを箇条書き。末尾「詳細↓リプ欄（#PR）」`,
+  'discovery':`スタイル：【知ってた？発見型】「知らない人は損してる」で開始。穴場感・ガイドブック未掲載感を演出。末尾「詳細↓リプ欄（#PR）」`,
+  'scene':`スタイル：【情景・詩的型】短い行で改行多用。1行1情景。余白で読者に想像させる。末尾「詳細↓リプ欄（#PR）」`,
+};
+
+function buildPrompt(p) {
+  return `あなたはX（旧Twitter）でバズる旅行アフィリエイト投稿の専門家です。\n\n${STYLE_GUIDE[p.style]}\n\n【宿の情報】\n場所・宿名：${p.place}\nジャンル：${p.genre}\n特徴・ウリ：${p.feat||'指定なし'}\n\n【絶対ルール】\n- 本投稿：130〜200文字。リンクなし。末尾「詳細↓リプ欄（#PR）」必須\n- リプ欄：80〜150文字。宿の要点箇条書き3〜4点。末尾「【楽天アフィリリンクをここに貼る】（#PR）」必須\n- ハッシュタグ禁止。絵文字1〜3個のみ。テンプレート感を完全に排除\n- 読んで「行きたい/保存したい」と感じさせること\n\nJSONのみで返す：{"main":"本投稿テキスト","reply":"リプ欄テキスト"}`;
+}
+
+async function callAPI(prompt, maxTokens) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||'API error '+res.status); }
+  const data = await res.json();
+  return data.content.map(b=>b.text||'').join('');
+}
+
+async function generate() {
+  if (!apiKey) { document.getElementById('apikey-warn').style.display='block'; document.getElementById('apikey-warn').scrollIntoView({behavior:'smooth'}); return; }
+  const place = document.getElementById('inp-place').value.trim();
+  if (!place) { alert('場所・宿名を入力してください'); return; }
+  const params = {place, genre:document.getElementById('inp-genre').value, feat:document.getElementById('inp-feat').value.trim(), style:postStyle};
+  lastParams = params;
+  setLoading(true);
+  try {
+    const raw = await callAPI(buildPrompt(params), 800);
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('out-main').innerText = parsed.main;
+    document.getElementById('out-reply').innerText = parsed.reply;
+    updCC('out-main','cc-main'); updCC('out-reply','cc-reply');
+    document.getElementById('out-wrap').style.display = 'block';
+    setTimeout(()=>document.getElementById('out-wrap').scrollIntoView({behavior:'smooth',block:'start'}),80);
+  } catch(e) { alert('エラー：'+e.message); }
+  finally { setLoading(false); }
+}
+
+async function regenPart(part) {
+  if (!lastParams||!apiKey) return;
+  try {
+    const raw = await callAPI(buildPrompt(lastParams)+'\n\n※'+(part==='main'?'本投稿':'リプ欄')+'のみ別バリエーションで再生成。',500);
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (part==='main'&&parsed.main){document.getElementById('out-main').innerText=parsed.main;updCC('out-main','cc-main')}
+    if (part==='reply'&&parsed.reply){document.getElementById('out-reply').innerText=parsed.reply;updCC('out-reply','cc-reply')}
+  } catch(e){alert('再生成失敗：'+e.message)}
+}
+
+function setLoading(on) {
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=on;
+  btn.childNodes[btn.childNodes.length-1].textContent=on?' 生成中...':' ✦ 投稿文を生成する';
+}
+function updCC(id,ccId){
+  const len=document.getElementById(id).innerText.replace(/\n+$/,'').length;
+  const el=document.getElementById(ccId);
+  el.textContent=len+'文字';
+  el.style.color=len>280?'var(--red2)':'var(--green2)';
+}
+function copyEl(btn,id){
+  const text=document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(()=>markCopied(btn)).catch(()=>{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);markCopied(btn)});
+}
+function markCopied(btn){
+  const orig=btn.textContent;btn.textContent='✓ コピー済み';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied')},2000);
+}
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  document.getElementById('tab-'+id).classList.add('on');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
